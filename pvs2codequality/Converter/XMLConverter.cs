@@ -10,7 +10,8 @@ namespace Pvs2codequality.Converter
     {
         public static (int status, string? result, int linesFound) ParseFullDocument(
             string inputXML,
-            string? trimFolderName = null
+            string? trimFolderName = null,
+            string? reportFilenamePrefix = null
         )
         {
             var xDoc = new XmlDocument();
@@ -46,24 +47,34 @@ namespace Pvs2codequality.Converter
                 .Where(x => x.Name == "PVS-Studio_Analysis_Log")
                 .ToArray();
 
-            var result = ParseAllLogNodes(logRecords, trimFolderName);
+            var result = ParseAllLogNodes(
+                logRecords,
+                trimFolderName,
+                reportFilenamePrefix
+            );
 
             return (0, System.Text.Json.JsonSerializer.Serialize(result), result.Count);
         }
 
         public static ICollection<CodeQualityLogRecord> ParseAllLogNodes(
             ICollection<XmlElement> logRecords,
-            string trimFolderName
+            string trimFolderName,
+            string? reportFilenamePrefix
         )
         {
             return logRecords
-                .SelectMany(t => ParseAllLogNodes(t, trimFolderName))
+                .SelectMany(t => ParseAllLogNodes(
+                    logRecord: t,
+                    trimFolderName: trimFolderName,
+                    reportFilenamePrefix: reportFilenamePrefix
+                ))
                 .ToArray();
         }
 
         public static ICollection<CodeQualityLogRecord> ParseAllLogNodes(
             XmlElement logRecord,
-            string trimFolderName
+            string trimFolderName,
+            string? reportFilenamePrefix
         )
         {
             var fields = new[]
@@ -75,16 +86,24 @@ namespace Pvs2codequality.Converter
                     {
                         if (t.InnerText != null)
                         {
-                            return (fieldName, value: t.InnerText);
+                            return (fieldName, value: (string?) t.InnerText);
                         }
                     }
 
-                    return (fieldName, null);
+                    return (fieldName, value: (string?) null);
                 })
                 .ToDictionary(
                     t => t.fieldName,
                     t => t.value
                 );
+            if (reportFilenamePrefix != null)
+            {
+                reportFilenamePrefix = reportFilenamePrefix.TrimEnd('/', '\\');
+                if (reportFilenamePrefix == string.Empty)
+                {
+                    reportFilenamePrefix = null;
+                }
+            }
 
             var additionalPositionNodes = logRecord
                 .GetElementsByTagName("Positions")
@@ -96,19 +115,23 @@ namespace Pvs2codequality.Converter
                     var filename = t.InnerText;
                     return lines
                         .Split(',')
-                        .Select(line => (filename, lineNumber: int.Parse(line.Trim())));
+                        .Select(line => (filename: (string?) filename, lineNumber: int.Parse(line.Trim())));
                 })
                 .SelectMany(t => t)
                 .ToList();
-            additionalPositionNodes.Add((values["File"], int.Parse(values["Line"])));
+            additionalPositionNodes.Add((values["File"], int.Parse(values["Line"] ?? "0")));
             var results = additionalPositionNodes
                 .ToHashSet()
                 .Select(t =>
                 {
                     var localFile = "";
-                    if (t.filename != "")
+                    if (!string.IsNullOrEmpty(t.filename))
                     {
                         localFile = t.filename.Substring(trimFolderName.Length).TrimStart('/', '\\');
+                        if (reportFilenamePrefix != null)
+                        {
+                            localFile = reportFilenamePrefix + "/" + localFile;
+                        }
                     }
 
                     // ReSharper disable once UseObjectOrCollectionInitializer

@@ -38,7 +38,11 @@ namespace Pvs2codequality
             }
 
             var inputXML = File.ReadAllText(options.InputFile);
-            var outputJson = XMLConverter.ParseFullDocument(inputXML);
+            var outputJson = XMLConverter.ParseFullDocument(
+                inputXML,
+                trimFolderName: null,
+                reportFilenamePrefix: options.ReportFilenamePrefix
+            );
             File.WriteAllText(outputFilename, outputJson.result!);
             Console.WriteLine(
                 "File {0} created. {1} lines found",

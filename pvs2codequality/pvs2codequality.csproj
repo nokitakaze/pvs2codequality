@@ -8,12 +8,12 @@
         <RootNamespace>Pvs2codequality</RootNamespace>
         <PackageId>Pvs2codequality</PackageId>
         <Authors>Nokita Kaze</Authors>
-        <Company>Pvs2codequality</Company>
+        <Company>Nokita Kaze</Company>
         <Product>Pvs2codequality</Product>
         <IsPackable>false</IsPackable>
-        <AssemblyVersion>0.1.0</AssemblyVersion>
+        <AssemblyVersion>0.1.1</AssemblyVersion>
         <PackageVersion>0.1.0</PackageVersion>
-        <FileVersion>0.1.0</FileVersion>
+        <FileVersion></FileVersion>
     </PropertyGroup>
 
     <ItemGroup>
