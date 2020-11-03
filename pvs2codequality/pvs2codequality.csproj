@@ -11,6 +11,9 @@
         <Company>Pvs2codequality</Company>
         <Product>Pvs2codequality</Product>
         <IsPackable>false</IsPackable>
+        <AssemblyVersion>0.1.0</AssemblyVersion>
+        <PackageVersion>0.1.0</PackageVersion>
+        <FileVersion>0.1.0</FileVersion>
     </PropertyGroup>
 
     <ItemGroup>

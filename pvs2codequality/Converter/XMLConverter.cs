@@ -8,7 +8,7 @@ namespace Pvs2codequality.Converter
 {
     internal static class XMLConverter
     {
-        public static (int status, string? result) ParseFullDocument(
+        public static (int status, string? result, int linesFound) ParseFullDocument(
             string inputXML,
             string? trimFolderName = null
         )
@@ -35,7 +35,7 @@ namespace Pvs2codequality.Converter
 
                 if (trimFolderName == null)
                 {
-                    return (1, null);
+                    return (1, null, -1);
                 }
             }
 
@@ -48,7 +48,7 @@ namespace Pvs2codequality.Converter
 
             var result = ParseAllLogNodes(logRecords, trimFolderName);
 
-            return (0, System.Text.Json.JsonSerializer.Serialize(result));
+            return (0, System.Text.Json.JsonSerializer.Serialize(result), result.Count);
         }
 
         public static ICollection<CodeQualityLogRecord> ParseAllLogNodes(

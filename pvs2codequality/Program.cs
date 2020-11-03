@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using CommandLine;
 using Pvs2codequality.Converter;
 
@@ -6,17 +7,19 @@ namespace Pvs2codequality
 {
     internal static class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
+            int returnCode = 0;
             Parser
                 .Default
                 .ParseArguments<Options>(args)
-                .WithParsed(RunOptionsAndReturnExitCode);
+                .WithParsed(o => { returnCode = RunOptionsAndReturnExitCode(o); });
+
+            return returnCode;
         }
 
-        public static void RunOptionsAndReturnExitCode(object rawOptions)
+        public static int RunOptionsAndReturnExitCode(Options options)
         {
-            var options = (Options) rawOptions;
             var outputFilename = options.OutputFile;
             if (outputFilename == null)
             {
@@ -24,9 +27,26 @@ namespace Pvs2codequality
                 outputFilename = options.InputFile.Remove(i) + ".json";
             }
 
+            if (!File.Exists(options.InputFile))
+            {
+                Console.WriteLine(
+                    "File {0} does not exist",
+                    outputFilename
+                );
+
+                return 100;
+            }
+
             var inputXML = File.ReadAllText(options.InputFile);
             var outputJson = XMLConverter.ParseFullDocument(inputXML);
             File.WriteAllText(outputFilename, outputJson.result!);
+            Console.WriteLine(
+                "File {0} created. {1} lines found",
+                outputFilename,
+                outputJson.linesFound
+            );
+
+            return outputJson.status;
         }
     }
 }
